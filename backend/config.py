@@ -1,7 +1,5 @@
-""" Configuration file for the Flask app. """
-import os
-
+"""Contains configuration details such as database credentials"""
 class Config:
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://username:password@localhost/homestock'
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:root@localhost:3306/homestock'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'your-secret-key'
+    SECRET_KEY = 'your-secret-key'

@@ -5,6 +5,11 @@ __pycache__/
 
 # C extensions
 *.so
+.js
+.json
+.md
+.ico 
+
 
 # Distribution / packaging
 .Python
@@ -23,7 +28,11 @@ wheels/
 share/python-wheels/
 *.egg-info/
 .installed.cfg
-*.egg
+*.egg\
+frontend\node_modules\
+config.py
+
+
 MANIFEST
 
 # PyInstaller

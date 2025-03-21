@@ -1,6 +1,8 @@
+""" A directory to store Flask route handlers (views)"""
 from flask import Blueprint, request, jsonify
-from ..models.user import User
-from .. import db
+from db import db
+from models.user import User
+
 
 user_routes = Blueprint('user_routes', __name__)
 
@@ -38,6 +40,7 @@ def update_user(user_id):
         user.username = data.get('username', user.username)
         user.email = data.get('email', user.email)
         user.role = data.get('role', user.role)
+        db.session.flush()
         db.session.commit()
         return jsonify({"message": "User updated successfully!"}), 200
     return jsonify({"message": "User not found!"}), 404
@@ -47,6 +50,7 @@ def delete_user(user_id):
     user = User.query.get(user_id)
     if user:
         db.session.delete(user)
+        db.session.flush()
         db.session.commit()
         return jsonify({"message": "User deleted successfully!"}), 200
     return jsonify({"message": "User not found!"}), 404
