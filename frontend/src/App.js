@@ -7,13 +7,13 @@ const App = () => {
     const [selectedUser, setSelectedUser] = useState(null);
 
     const handleSave = () => {
-        setSelectedUser(null); // Reset form after save
+        setSelectedUser(null); 
     };
 
     const handleDelete = async (userId) => {
         try {
             await axios.delete(`http://localhost:5000/users/${userId}`);
-            handleSave(); // Refresh the user list
+            handleSave(); 
         } catch (error) {
             console.error('Error deleting user:', error);
         }
