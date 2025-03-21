@@ -12,7 +12,7 @@ def create_user():
     new_user = User(
         username=data['username'],
         email=data['email'],
-        password=data['password'],  # In real apps, hash the password!
+        password=data['password'],
         role=data.get('role', 'user')
     )
     db.session.add(new_user)
