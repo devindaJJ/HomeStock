@@ -3,7 +3,7 @@ from flask import Flask
 from flask_cors import CORS
 from config import Config
 from db import db
-from routes.user_routes import user_routes
+from routes.item_routes import user_routes
 
 def create_app():
     app = Flask(__name__)
