@@ -4,6 +4,7 @@ from flask_cors import CORS
 from config import Config
 from db import db
 from routes.user_routes import user_routes
+from routes.stock_routes import stock_routes
 
 def create_app():
     app = Flask(__name__)
@@ -17,6 +18,7 @@ def create_app():
 
     # Register routes
     app.register_blueprint(user_routes)
+    app.register_blueprint(stock_routes)
 
     return app
 

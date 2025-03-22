@@ -1,31 +1,22 @@
-import React, { useState } from 'react';
-import UserList from './components/UserList';
-import UserForm from './components/UserForm';
-import axios from 'axios';
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import "bootstrap/dist/css/bootstrap.min.css";
+import Home from "./pages/Home";
+import AddStock from "./pages/AddStock";
+import ViewStock from "./pages/ViewStock";
+import ViewAlerts from "./pages/ViewAlerts";
 
-const App = () => {
-    const [selectedUser, setSelectedUser] = useState(null);
-
-    const handleSave = () => {
-        setSelectedUser(null); // Reset form after save
-    };
-
-    const handleDelete = async (userId) => {
-        try {
-            await axios.delete(`http://localhost:5000/users/${userId}`);
-            handleSave(); // Refresh the user list
-        } catch (error) {
-            console.error('Error deleting user:', error);
-        }
-    };
-
-    return (
-        <div>
-            <h1>User Management</h1>
-            <UserForm user={selectedUser} onSave={handleSave} />
-            <UserList onEdit={setSelectedUser} onDelete={handleDelete} />
-        </div>
-    );
-};
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/add-stock" element={<AddStock />} />
+        <Route path="/view-stock" element={<ViewStock />} />
+        <Route path="/view-alerts" element={<ViewAlerts />} />
+      </Routes>
+    </Router>
+  );
+}
 
 export default App;
