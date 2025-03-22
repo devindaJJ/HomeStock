@@ -7,14 +7,14 @@ from models.item import Item
 item_routes = Blueprint('item_routes', __name__)
 
 # Get all items
-@app.route("/api/items",methods=["GET"])
+@item_routes.route("/api/items",methods=["GET"])
 def get_items():
     items = Item.query.all()
     result = [item.to_json() for item in items]
     return jsonify(result)
 
 #Create a item
-@app.route("/api/items",methods=["POST"])
+@item_routes.route("/api/items",methods=["POST"])
 def create_item():
     try:
         data = request.json
@@ -43,7 +43,7 @@ def create_item():
         return jsonify({"error":str(e)}), 500
     
 # Delete a item
-@app.route("/api/items/<int:id>",methods=["DELETE"])
+@item_routes.route("/api/items/<int:id>",methods=["DELETE"])
 def delete_item(id):
     try:
         item = Item.query.get(id)
@@ -59,7 +59,7 @@ def delete_item(id):
         return jsonify({"error":str(e)}),500
     
 # Update a item 
-@app.route("/api/items/<int:id>",methods=["PATCH"])
+@item_routes.route("/api/items/<int:id>",methods=["PATCH"])
 def update_item(id):
     try:
         item = Item.query.get(id)
@@ -80,7 +80,7 @@ def update_item(id):
         return jsonify({"error":str(e)}),500
 
 # Search items by name
-@app.route("/api/items/search", methods=["GET"])
+@item_routes.route("/api/items/search", methods=["GET"])
 def search_items():
     name = request.args.get("name")
 
