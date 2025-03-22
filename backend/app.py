@@ -11,6 +11,7 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
+
     # Initialize SQLAlchemy with the app
     db.init_app(app)  # Proper initialization of SQLAlchemy with app
 
