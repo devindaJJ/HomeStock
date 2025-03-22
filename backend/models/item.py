@@ -6,7 +6,7 @@ class Item(db.Model):
     __tablename__ = 'items'  # Ensure this matches the table name in the database
 
     item_id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # item_id as primary key
-    user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False)  # Foreign key to users
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)  # Foreign key to users
     name = db.Column(db.String(255), nullable=False)  # Adjusted to 255 chars as in your SQL
     quantity = db.Column(db.Integer, nullable=False)  # Integer type for quantity
     category = db.Column(db.String(255), nullable=False)  # Adjusted to 255 chars for category
