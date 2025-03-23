@@ -6,6 +6,7 @@ from db import db  # Assuming db.py initializes SQLAlchemy
 from routes.item_routes import item_routes
 from routes.user_routes import user_routes
 from routes.stock_routes import stock_routes
+from routes.reminder_routes import reminder_routes
 
 def create_app():
     app = Flask(__name__)
@@ -22,6 +23,7 @@ def create_app():
     app.register_blueprint(user_routes)
     app.register_blueprint(item_routes)
     app.register_blueprint(stock_routes)
+    app.register_blueprint(reminder_routes)
 
     return app
 

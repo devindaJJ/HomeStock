@@ -2,20 +2,14 @@
 from db import db
 
 class Reminder(db.Model):
-    id = db.Column(db.Integer,primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    role = db.Column(db.String(50), nullable=False)
-    description = db.Column(db.Text, nullable=False)
-    gender = db.Column(db.String(10), nullable=False)
-    img_url = db.Column(db.String(200), nullable=True)
+    __tablename__ = 'reminders'
+    reminder_id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)  # Corrected reference here
+    reminder_text = db.Column(db.String(255), nullable=False)
+    due_date = db.Column(db.Date, nullable=False)
+    is_completed = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.TIMESTAMP, server_default=db.func.current_timestamp())
+    updated_at = db.Column(db.TIMESTAMP, server_default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
-
-    def to_json(self):
-        return{
-            "id":self.id,
-            "name":self.name,
-            "role":self.role,
-            "description":self.description,
-            "gender":self.gender,
-            "imgUrl":self.img_url,
-        }
+    # Relationship with the User model
+    user = db.relationship('User', backref='reminders')
