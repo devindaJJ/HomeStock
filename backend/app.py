@@ -3,7 +3,7 @@ from flask import Flask
 from flask_cors import CORS
 from config import Config
 from db import db
-from routes.user_routes import user_routes #add this line 
+from routes.reminder_routes import reminder_routes 
 
 def create_app():
     app = Flask(__name__)
@@ -16,7 +16,7 @@ def create_app():
     db.init_app(app)
 
     # Register routes
-    app.register_blueprint(user_routes)
+    app.register_blueprint(reminder_routes)
 
     return app
 
