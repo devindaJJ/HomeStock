@@ -6,8 +6,10 @@ class Reminder(db.Model):
     __tablename__ = 'reminders'
     reminder_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)  # Corrected reference here
+    title = db.Column(db.String(100), nullable=False)
     reminder_text = db.Column(db.String(255), nullable=False)
     due_date = db.Column(db.Date, nullable=False)
+    reminder_time = db.Column(db.Time, nullable=True)
     is_completed = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.TIMESTAMP, server_default=db.func.current_timestamp())
     updated_at = db.Column(db.TIMESTAMP, server_default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
