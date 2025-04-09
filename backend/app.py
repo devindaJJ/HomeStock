@@ -5,6 +5,7 @@ from config import Config
 from db import db  # Assuming db.py initializes SQLAlchemy
 from routes.item_routes import item_routes
 from routes.user_routes import user_routes
+from routes.stock_routes import stock_routes
 from routes.auth_routes import auth_routes
 from extensions import mail
 import os
@@ -52,7 +53,8 @@ def create_app():
     # Register blueprints
     app.register_blueprint(user_routes)  # Remove url_prefix for user routes
     app.register_blueprint(auth_routes)  # Remove url_prefix for auth routes
-    
+    app.register_blueprint(stock_routes)
+
     return app
 
 if __name__ == '__main__':
