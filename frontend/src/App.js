@@ -9,6 +9,11 @@ import Navbar from './components/Navbar';
 import PrivateRoute from './components/PrivateRoute';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import "bootstrap/dist/css/bootstrap.min.css";
+import Home from "./pages/Home";
+import AddStock from "./pages/AddStock";
+import ViewStock from "./pages/ViewStock";
+import ViewAlerts from "./pages/ViewAlerts";
 
 const App = () => {
     return (
@@ -31,6 +36,10 @@ const App = () => {
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
                     <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/" element={<Home />} />
+                    <Route path="/add-stock" element={<AddStock />} />
+                    <Route path="/view-stock" element={<ViewStock />} />
+                    <Route path="/view-alerts" element={<ViewAlerts />} />
                     <Route 
                         path="/dashboard" 
                         element={
