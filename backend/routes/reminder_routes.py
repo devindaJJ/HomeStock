@@ -12,14 +12,20 @@ def create_reminder():
     
     # Convert due_date to datetime object
     try:
-        due_date = datetime.strptime(data['due_date'], '%Y-%m-%d')  # Assuming the date format is 'YYYY-MM-DD'
+       due_date = datetime.strptime(data['due_date'], '%Y-%m-%d')  # Assuming the date format is 'YYYY-MM-DD'
     except ValueError:
         return jsonify({"message": "Invalid date format, please use YYYY-MM-DD"}), 400
+    
+    if 'title' not in data:
+       return jsonify({"message": "Title is required!"}), 400
+
 
     new_reminder = Reminder(
+        title=data['title'],
         user_id=data['user_id'],
         reminder_text=data['reminder_text'],
         due_date=due_date,
+        reminder_time=datetime.strptime(data['reminder_time'], "%H:%M:%S").time() if 'reminder_time' in data else None,
         is_completed=data.get('is_completed', False)
     )
     db.session.add(new_reminder)
@@ -31,9 +37,11 @@ def get_all_reminders():
     reminders = Reminder.query.all()
     reminder_list = [{
         "reminder_id": reminder.reminder_id,
+        "title":reminder.title,
         "user_id": reminder.user_id,
         "reminder_text": reminder.reminder_text,
         "due_date": reminder.due_date.strftime('%Y-%m-%d'),  # Formatting date
+        "reminder_time": reminder.reminder_time.strftime('%H:%M:%S') if reminder.reminder_time else None,
         "is_completed": reminder.is_completed,
         "created_at": reminder.created_at.strftime('%Y-%m-%d %H:%M:%S'),  # Formatting timestamp
         "updated_at": reminder.updated_at.strftime('%Y-%m-%d %H:%M:%S')  # Formatting timestamp
@@ -46,9 +54,11 @@ def get_reminder(reminder_id):
     if reminder:
         return jsonify({
             "reminder_id": reminder.reminder_id,
+            "title":reminder.title,
             "user_id": reminder.user_id,
             "reminder_text": reminder.reminder_text,
             "due_date": reminder.due_date.strftime('%Y-%m-%d'),  # Formatting date
+            "reminder_time": reminder.reminder_time.strftime('%H:%M:%S') if reminder.reminder_time else None,
             "is_completed": reminder.is_completed,
             "created_at": reminder.created_at.strftime('%Y-%m-%d %H:%M:%S'),  # Formatting timestamp
             "updated_at": reminder.updated_at.strftime('%Y-%m-%d %H:%M:%S')  # Formatting timestamp
