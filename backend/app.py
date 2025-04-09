@@ -7,6 +7,7 @@ from routes.item_routes import item_routes
 from routes.user_routes import user_routes
 from routes.stock_routes import stock_routes
 from routes.auth_routes import auth_routes
+from routes.reminder_routes import reminder_routes
 from extensions import mail
 import os
 
@@ -54,6 +55,7 @@ def create_app():
     app.register_blueprint(user_routes)  # Remove url_prefix for user routes
     app.register_blueprint(auth_routes)  # Remove url_prefix for auth routes
     app.register_blueprint(stock_routes)
+    app.register_blueprint(reminder_routes)
 
     return app
 
