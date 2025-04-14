@@ -2,12 +2,13 @@
 from flask import Flask
 from flask_cors import CORS
 from config import Config
-from db import db  # Assuming db.py initializes SQLAlchemy
+from db import db 
 from routes.item_routes import item_routes
 from routes.user_routes import user_routes
 from routes.stock_routes import stock_routes
 from routes.auth_routes import auth_routes
 from routes.reminder_routes import reminder_routes
+from routes.shopping_list_routes import shopping_list_routes
 from extensions import mail
 import os
 
@@ -29,7 +30,7 @@ def create_app():
         resources={
             r"/*": {
                 "origins": ["http://localhost:3000"],
-                "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+                "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
                 "allow_headers": ["Content-Type", "Authorization"],
                 "supports_credentials": True,
                 "expose_headers": ["Content-Type", "Authorization"]
@@ -56,6 +57,8 @@ def create_app():
     app.register_blueprint(auth_routes)  # Remove url_prefix for auth routes
     app.register_blueprint(stock_routes)
     app.register_blueprint(reminder_routes)
+    app.register_blueprint(item_routes)
+    app.register_blueprint(shopping_list_routes)
 
     return app
 
