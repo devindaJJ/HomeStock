@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./Home.css";
-import heroVideo from "../assets/heroVideo.mp4";
+import heroVideo from "..public/videos/heroVideo.mp4";
 
 // Import images
 import feature1 from "../assets/feature1.jpg";

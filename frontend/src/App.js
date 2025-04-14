@@ -10,10 +10,11 @@ import PrivateRoute from './components/PrivateRoute';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import "bootstrap/dist/css/bootstrap.min.css";
-import Home from "./pages/Home";
-import AddStock from "./pages/AddStock";
-import ViewStock from "./pages/ViewStock";
-import ViewAlerts from "./pages/ViewAlerts";
+import Home from "./components/Home";
+import ShoppingList from "./pages/ShoppingList";
+import Inventory from "./pages/Inventory";
+import StockManagement from "./pages/StockManagement";
+import Reminders from "./pages/Reminders";
 
 const App = () => {
     return (
@@ -37,9 +38,38 @@ const App = () => {
                     <Route path="/register" element={<Register />} />
                     <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/" element={<Home />} />
-                    <Route path="/add-stock" element={<AddStock />} />
-                    <Route path="/view-stock" element={<ViewStock />} />
-                    <Route path="/view-alerts" element={<ViewAlerts />} />
+                    <Route 
+                        path="/shopping-list" 
+                        element={
+                            <PrivateRoute>
+                                <ShoppingList />
+                            </PrivateRoute>
+                        } 
+                    />
+                    <Route 
+                        path="/inventory" 
+                        element={
+                            <PrivateRoute>
+                                <Inventory />
+                            </PrivateRoute>
+                        } 
+                    />
+                    <Route 
+                        path="/stock-management" 
+                        element={
+                            <PrivateRoute>
+                                <StockManagement />
+                            </PrivateRoute>
+                        } 
+                    />
+                    <Route 
+                        path="/reminders" 
+                        element={
+                            <PrivateRoute>
+                                <Reminders />
+                            </PrivateRoute>
+                        } 
+                    />
                     <Route 
                         path="/dashboard" 
                         element={
@@ -56,7 +86,6 @@ const App = () => {
                             </PrivateRoute>
                         } 
                     />
-                    <Route path="/" element={<Login />} />
                 </Routes>
             </main>
         </div>

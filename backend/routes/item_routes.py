@@ -20,18 +20,22 @@ def create_item():
         data = request.json
 
         #validations
-        required_fields = ["name", "quantity", "description", "category"]
+        required_fields = ["item_name", "category", "quantity", "location", "user_id", "purchase_date", "expiry_date"]
         for field in required_fields:
             if field not in data:
                return jsonify({"error":f'Missing required field: {field}'}), 400
 
     
-        name = data.get("name")
-        quantity = data.get("quantity")
-        description = data.get("description")
+        item_name = data.get("item_name")
         category = data.get("category")
+        quantity = data.get("quantity")
+        location=data.get("location")
+        user_id = data.get("user_id")  
+        purchase_date=data.get("purchase_date")  # Optional
+        expiry_date=data.get("expiry_date") 
+    
 
-        new_item = Item(name=name, quantity=quantity, description=description, category=category)
+        new_item = Item(item_name=item_name,category=category, quantity=quantity, location=location, user_id=user_id,)
 
         db.session.add(new_item)
         db.session.commit()

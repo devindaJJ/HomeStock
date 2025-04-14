@@ -49,6 +49,25 @@ def get_all_stock_items():
         return jsonify(stock_list), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+
+# Delete a stock item by ID
+@stock_routes.route('/stock/<int:stock_id>', methods=['DELETE'])
+def delete_stock_item(stock_id):
+    """
+    Delete a stock item by its ID.
+    """
+    try:
+        item = StockItem.query.get(stock_id)
+        if item:
+            db.session.delete(item)
+            db.session.commit()
+            return jsonify({"message": f"Stock item {stock_id} deleted successfully!"}), 200
+        return jsonify({"error": "Stock item not found."}), 404
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
 
 # Check for alerts
 @stock_routes.route('/alerts/check', methods=['POST'])
