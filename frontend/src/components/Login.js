@@ -39,7 +39,13 @@ const Login = () => {
             if (response.data.token) {
                 // Store auth data
                 localStorage.setItem('token', response.data.token);
-                localStorage.setItem('user', JSON.stringify(response.data.user));
+                localStorage.setItem('user', JSON.stringify({
+                    user_id: response.data.user.user_id,
+                    username: response.data.user.username,
+                    email: response.data.user.email,
+                    role: response.data.user.role
+                }));
+                
                 
                 // Configure axios defaults for future requests
                 axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;

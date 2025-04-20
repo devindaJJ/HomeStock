@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./Home.css";
-import heroVideo from "..public/videos/heroVideo.mp4";
+
 
 // Import images
 import feature1 from "../assets/feature1.jpg";
@@ -17,8 +17,8 @@ const Home = () => {
     <div>
       {/* Hero Section */}
       <div className="hero-section">
-        <video autoPlay muted loop className="heroVideo">
-          <source src={heroVideo} type="video/mp4" />
+      <video autoPlay muted loop className="hero-video">
+        <source src="/videos/heroVideo.mp4" type="video/mp4" />
           Your browser does not support the video tag.
         </video>
         <div className="hero-content">

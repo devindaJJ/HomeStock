@@ -3,6 +3,13 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Ignore Python bytecode files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+
 # C extensions
 *.so
 .js
@@ -31,6 +38,7 @@ share/python-wheels/
 *.egg\
 frontend\node_modules\
 config.py
+.pyc
 
 
 MANIFEST
@@ -178,3 +186,13 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Byte-compiled / optimized / DLL files
+*.pyc
+*.pyo
+*.pyd

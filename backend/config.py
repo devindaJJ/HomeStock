@@ -10,8 +10,13 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 
         'sqlite:///' + os.path.join(basedir, 'instance', 'homestock.db'))
+    
+    # JWT Configuration
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'your-jwt-secret-key')
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
+    JWT_TOKEN_LOCATION = ['headers']
+    JWT_HEADER_NAME = 'Authorization'
+    JWT_HEADER_TYPE = 'Bearer'
     
     # Email configuration
     MAIL_SERVER = 'smtp.gmail.com'

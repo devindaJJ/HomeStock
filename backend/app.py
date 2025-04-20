@@ -1,4 +1,3 @@
-"""Entry point for running the Flask application"""
 from flask import Flask
 from flask_cors import CORS
 from config import Config
@@ -9,41 +8,29 @@ from routes.stock_routes import stock_routes
 from routes.auth_routes import auth_routes
 from routes.reminder_routes import reminder_routes
 from routes.shopping_list_routes import shopping_list_routes
+from routes.dashboard_routes import dashboard_routes
 from extensions import mail
+from flask_jwt_extended import JWTManager
 import os
 
 def create_app():
-    """Create and configure an instance of the Flask application."""
     app = Flask(__name__)
-    
-    # Load configuration
     app.config.from_object(Config)
-    
-    # Ensure the instance folder exists
+
     try:
         os.makedirs(app.instance_path)
     except OSError:
         pass
+
+    # Apply CORS to the app
+   
+    CORS(app, supports_credentials=True, origins=["http://localhost:3000"])
     
-    # Initialize extensions with proper CORS configuration
-    CORS(app, 
-        resources={
-            r"/*": {
-                "origins": ["http://localhost:3000"],
-                "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-                "allow_headers": ["Content-Type", "Authorization"],
-                "supports_credentials": True,
-                "expose_headers": ["Content-Type", "Authorization"]
-            }
-        },
-        supports_credentials=True
-    )
-    
-    # Initialize database
+
     db.init_app(app)
     mail.init_app(app)
-    
-    # Create database tables
+    jwt = JWTManager(app)
+
     with app.app_context():
         try:
             db.create_all()
@@ -51,14 +38,20 @@ def create_app():
         except Exception as e:
             print(f"Error creating database tables: {e}")
             raise
-    
+
     # Register blueprints
-    app.register_blueprint(user_routes)  # Remove url_prefix for user routes
-    app.register_blueprint(auth_routes)  # Remove url_prefix for auth routes
+    app.register_blueprint(user_routes)
+    app.register_blueprint(auth_routes)
     app.register_blueprint(stock_routes)
     app.register_blueprint(reminder_routes)
     app.register_blueprint(item_routes)
     app.register_blueprint(shopping_list_routes)
+    app.register_blueprint(dashboard_routes)
+
+    # Handle OPTIONS requests
+    @app.route('/<path:path>', methods=['OPTIONS'])
+    def options(path):
+        return '', 204
 
     return app
 

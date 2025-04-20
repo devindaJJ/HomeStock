@@ -1,0 +1,67 @@
+.theme-card {
+    @apply rounded-xl shadow-md transition-all duration-300;
+}
+
+.theme-card.dark {
+    @apply bg-[#1a1a1a] border border-gray-800 text-white;
+}
+
+.theme-card.light {
+    @apply bg-white border border-gray-200 text-gray-900;
+}
+
+.theme-input.dark {
+    @apply bg-[#2a2a2a] border-gray-700 text-white placeholder-gray-400;
+}
+
+.theme-input.light {
+    @apply bg-white border-gray-300 text-gray-900 placeholder-gray-500;
+}
+
+.theme-button.dark {
+    @apply bg-indigo-600 text-white hover:bg-indigo-700;
+}
+
+.theme-button.light {
+    @apply bg-indigo-500 text-white hover:bg-indigo-600;
+}
+
+.theme-button-secondary.dark {
+    @apply bg-gray-700 text-white hover:bg-gray-600;
+}
+
+.theme-button-secondary.light {
+    @apply bg-gray-200 text-gray-700 hover:bg-gray-300;
+}
+
+.theme-table.dark {
+    @apply bg-[#1a1a1a] text-white;
+}
+
+.theme-table.light {
+    @apply bg-white text-gray-900;
+}
+
+.theme-table-header.dark {
+    @apply bg-gray-800 text-gray-200;
+}
+
+.theme-table-header.light {
+    @apply bg-gray-50 text-gray-600;
+}
+
+.theme-table-row.dark {
+    @apply border-gray-700 hover:bg-gray-800;
+}
+
+.theme-table-row.light {
+    @apply border-gray-200 hover:bg-gray-50;
+}
+
+.theme-badge.dark {
+    @apply bg-indigo-600/20 text-indigo-400 border border-indigo-500/50;
+}
+
+.theme-badge.light {
+    @apply bg-indigo-50 text-indigo-700 border border-indigo-200;
+} 

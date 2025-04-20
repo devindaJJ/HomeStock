@@ -67,6 +67,39 @@ def delete_stock_item(stock_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+    
+@stock_routes.route('/stock/<int:stock_id>', methods=['PUT'])
+def update_stock_item(stock_id):
+    """
+    Update an existing stock item
+    """
+    data = request.get_json()
+    stock_item = StockItem.query.get(stock_id)
+    
+    if not stock_item:
+        return jsonify({"error": "Stock item not found"}), 404
+
+    try:
+        if 'name' in data:
+            stock_item.name = data['name']
+        if 'quantity' in data:
+            stock_item.quantity = data['quantity']
+        if 'expiration_date' in data:
+            stock_item.expiration_date = datetime.strptime(data['expiration_date'], '%Y-%m-%d').date()
+        
+        db.session.commit()
+        return jsonify({
+            "message": "Stock item updated successfully",
+            "stock_id": stock_item.stock_id,
+            "name": stock_item.name,
+            "quantity": stock_item.quantity,
+            "expiration_date": stock_item.expiration_date.strftime('%Y-%m-%d') if stock_item.expiration_date else None
+        }), 200
+    except ValueError as e:
+        return jsonify({"error": "Invalid date format. Use YYYY-MM-DD"}), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
 
 
 # Check for alerts

@@ -1,6 +1,8 @@
 """ A directory to store Flask route handlers (views)"""
 from flask import Blueprint, request, jsonify
 from db import db
+import json
+from datetime import datetime  
 from models.item import Item
 
 
@@ -63,25 +65,39 @@ def delete_item(id):
         return jsonify({"error":str(e)}),500
     
 # Update a item 
-@item_routes.route("/api/items/<int:id>",methods=["PATCH"])
-def update_item(id):
+@item_routes.route('/api/items/<int:item_id>', methods=['PUT'])
+def update_item(item_id):
+    """Update an existing inventory item"""
+    item = Item.query.get(item_id)
+    if not item:
+        return jsonify({"error": "Item not found"}), 404
+
+    data = request.get_json()
+    
     try:
-        item = Item.query.get(id)
-        if item is None:
-            return jsonify({"error": "Item not found"}), 404
+        # Update only the fields that are provided
+        if 'item_name' in data:
+            item.item_name = data['item_name']
+        if 'category' in data:
+            item.category = data['category']
+        if 'quantity' in data:
+            item.quantity = data['quantity']
+        if 'location' in data:
+            item.location = data['location']
         
-        data = request.json
-
-        item.name = data.get("name",item.name)
-        item.quantity = data.get("quantity",item.quantity)
-        item.description = data.get("description",item.description)
-        item.category = data.get("category",item.category)
-
+        # Handle date fields
+        if 'purchase_date' in data:
+            item.purchase_date = datetime.strptime(data['purchase_date'], '%Y-%m-%d').date() if data['purchase_date'] else None
+        if 'expiry_date' in data:
+            item.expiry_date = datetime.strptime(data['expiry_date'], '%Y-%m-%d').date() if data['expiry_date'] else None
+        
         db.session.commit()
-        return jsonify(item.to_json()),200
+        return jsonify(item.to_json()), 200
+    except ValueError as e:
+        return jsonify({"error": "Invalid date format. Use YYYY-MM-DD"}), 400
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error":str(e)}),500
+        return jsonify({"error": str(e)}), 500
 
 # Search items by name
 @item_routes.route("/api/items/search", methods=["GET"])

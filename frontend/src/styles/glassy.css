@@ -1,0 +1,42 @@
+.glassy-bg {
+  background: rgba(9, 9, 11, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+  border-radius: 12px;
+}
+
+.glassy-bg.light {
+  background: rgba(255, 255, 255, 0.4);
+  color: #1a1a1a;
+}
+
+.glassy-bg.dark {
+  background: rgba(9, 9, 11, 0.4);
+  color: #ffffff;
+}
+
+.glassy-bg.light .text-primary {
+  color: #1a1a1a;
+}
+
+.glassy-bg.dark .text-primary {
+  color: #ffffff;
+}
+
+.glassy-bg.light .text-secondary {
+  color: #4a4a4a;
+}
+
+.glassy-bg.dark .text-secondary {
+  color: #a0a0a0;
+}
+
+.glassy-bg.light .border-light {
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.glassy-bg.dark .border-light {
+  border-color: rgba(255, 255, 255, 0.1);
+} 
