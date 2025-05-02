@@ -19,9 +19,14 @@ class Config:
     JWT_HEADER_TYPE = 'Bearer'
     
     # Email configuration
-    MAIL_SERVER = 'smtp.gmail.com'
-    MAIL_PORT = 587
-    MAIL_USE_TLS = True
-    MAIL_USERNAME = os.environ.get('MAIL_USERNAME', 'your-email@gmail.com')
-    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD', 'your-app-password')
-    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_USERNAME', 'your-email@gmail.com')
+    MAIL_SERVER = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
+    MAIL_PORT = int(os.getenv('MAIL_PORT', 587))
+    MAIL_USE_TLS = os.getenv('MAIL_USE_TLS', 'True').lower() in ['true', '1', 't']
+    MAIL_USERNAME = os.getenv('MAIL_USERNAME', '')
+    MAIL_PASSWORD = os.getenv('MAIL_PASSWORD', '')
+    MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER', '')
+    
+    # Alert configuration
+    ALERT_DAYS_BEFORE_EXPIRATION = int(os.getenv('ALERT_DAYS_BEFORE_EXPIRATION', 7))
+    ALERT_LOW_STOCK_THRESHOLD = int(os.getenv('ALERT_LOW_STOCK_THRESHOLD', 5))
+    ALERT_EMAIL_RECIPIENTS = os.getenv('ALERT_EMAIL_RECIPIENTS', '').split(',')

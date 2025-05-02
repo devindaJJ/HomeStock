@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from db import db
 from models.stock import StockItem, Alert
 from datetime import datetime
@@ -109,11 +109,45 @@ def check_alerts():
     Check for low stock and expiration alerts.
     """
     try:
+        print("Starting alert check...")
+        print(f"MAIL_USERNAME configured: {bool(current_app.config['MAIL_USERNAME'])}")
+        print(f"MAIL_PASSWORD configured: {bool(current_app.config['MAIL_PASSWORD'])}")
+        print(f"ALERT_EMAIL_RECIPIENTS: {current_app.config['ALERT_EMAIL_RECIPIENTS']}")
+
+        # Check if email configuration is set up
+        if not current_app.config['MAIL_USERNAME'] or not current_app.config['MAIL_PASSWORD']:
+            error_msg = "Email configuration is not set up. Please configure MAIL_USERNAME and MAIL_PASSWORD in your .env file."
+            print(error_msg)
+            return jsonify({"error": error_msg}), 500
+
+        # Check if alert recipients are configured
+        if not current_app.config['ALERT_EMAIL_RECIPIENTS']:
+            error_msg = "No alert recipients configured. Please set ALERT_EMAIL_RECIPIENTS in your .env file."
+            print(error_msg)
+            return jsonify({"error": error_msg}), 500
+
+        print("Checking for low stock alerts...")
         check_low_stock()  # Check for low stock alerts
+        
+        print("Checking for expiration alerts...")
         check_expiration()  # Check for expiration alerts
-        return jsonify({"message": "Alerts checked successfully!"}), 200
+        
+        print("Alert check completed successfully")
+        return jsonify({
+            "message": "Alerts checked successfully!",
+            "details": "Email alerts have been sent to configured recipients."
+        }), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        error_msg = f"Error in check_alerts: {str(e)}"
+        print(error_msg)
+        import traceback
+        print("Full traceback:")
+        print(traceback.format_exc())
+        return jsonify({
+            "error": "Failed to check alerts",
+            "details": str(e),
+            "traceback": traceback.format_exc()
+        }), 500
 
 # Get active alerts
 @stock_routes.route('/alerts', methods=['GET'])
