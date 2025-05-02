@@ -5,6 +5,7 @@ from datetime import timedelta
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Config:
+        
     """Base configuration."""
     SECRET_KEY = os.environ.get('SECRET_KEY', 'your-secret-key')
     SQLALCHEMY_TRACK_MODIFICATIONS = False

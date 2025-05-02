@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaPlus, FaTrash, FaEdit, FaSearch, FaSort, FaBox, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { FaPlus, FaTrash, FaEdit, FaSearch, FaSort, FaBox, FaChevronDown, FaChevronUp, FaFileCsv, FaFileExport } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -20,6 +20,8 @@ const Inventory = ({ isDarkMode }) => {
     const [userData, setUserData] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
+    const [searchField, setSearchField] = useState('item_name'); // New state for search field selection
+    const [showExportOptions, setShowExportOptions] = useState(false); // New state for export options
     
     // Form states
     const [formData, setFormData] = useState({
@@ -172,7 +174,14 @@ const Inventory = ({ isDarkMode }) => {
 
         try {
             setLoading(true);
-            const response = await api.get(`/api/items/search?name=${searchTerm}`);
+            let response;
+            if (searchField === 'item_name') {
+                response = await api.get(`/api/items/search?name=${searchTerm}`);
+            } else if (searchField === 'category') {
+                response = await api.get(`/api/items/search?category=${searchTerm}`);
+            } else if (searchField === 'location') {
+                response = await api.get(`/api/items/search?location=${searchTerm}`);
+            }
             setInventory(response.data);
             setLoading(false);
         } catch (error) {
@@ -243,10 +252,42 @@ const Inventory = ({ isDarkMode }) => {
         setEditingItem(null);
     };
 
+    // Export to CSV function
+    const exportToCSV = () => {
+        let csvContent = "data:text/csv;charset=utf-8,";
+        
+        // Add headers
+        const headers = ["Item Name", "Quantity", "Category", "Location", "Purchase Date", "Expiry Date"];
+        csvContent += headers.join(",") + "\r\n";
+        
+        // Add data rows
+        filteredInventory.forEach(item => {
+            const row = [
+                `"${item.item_name}"`,
+                item.quantity,
+                `"${item.category}"`,
+                `"${item.location}"`,
+                item.purchase_date ? new Date(item.purchase_date).toLocaleDateString() : 'N/A',
+                item.expiry_date ? new Date(item.expiry_date).toLocaleDateString() : 'N/A'
+            ];
+            csvContent += row.join(",") + "\r\n";
+        });
+        
+        // Create download link
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `inventory_report_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     // Filter and sort the inventory
     const filteredInventory = inventory
         .filter(item => {
-            const matchesSearch = item.item_name.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesSearch = searchTerm ? 
+                item[searchField].toLowerCase().includes(searchTerm.toLowerCase()) : true;
             const matchesCategory = selectedCategory === 'All' || item.category === selectedCategory;
             return matchesSearch && matchesCategory;
         })
@@ -285,25 +326,73 @@ const Inventory = ({ isDarkMode }) => {
                             <h1 className={`text-2xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                                 Inventory Management
                             </h1>
-                            <button
-                                onClick={openAddModal}
-                                className={`theme-button ${isDarkMode ? 'dark' : 'light'} px-4 py-2 rounded-lg flex items-center`}
-                            >
-                                <FaPlus className="mr-2" />
-                                Add Item
-                            </button>
+                            <div className="flex space-x-2">
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setShowExportOptions(!showExportOptions)}
+                                        className={`theme-button ${isDarkMode ? 'dark' : 'light'} px-4 py-2 rounded-lg flex items-center`}
+                                    >
+                                        <FaFileExport className="mr-2" />
+                                        Export
+                                    </button>
+                                    {showExportOptions && (
+                                        <div className={`absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} ring-1 ring-black ring-opacity-5 z-10`}>
+                                            <button
+                                                onClick={() => {
+                                                    exportToCSV();
+                                                    setShowExportOptions(false);
+                                                }}
+                                                className={`block px-4 py-2 text-sm w-full text-left ${isDarkMode ? 'text-gray-200 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-100'}`}
+                                            >
+                                                <FaFileCsv className="inline mr-2" />
+                                                Export to CSV
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                                <button
+                                    onClick={openAddModal}
+                                    className={`theme-button ${isDarkMode ? 'dark' : 'light'} px-4 py-2 rounded-lg flex items-center`}
+                                >
+                                    <FaPlus className="mr-2" />
+                                    Add Item
+                                </button>
+                            </div>
                         </div>
 
                         {/* Search and Filter */}
-                        <div className="mb-6">
-                            <input
-                                type="text"
-                                placeholder="Search items..."
-                                className={`theme-input ${isDarkMode ? 'dark' : 'light'} w-full px-4 py-2 rounded-lg`}
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                            />
+                        <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="md:col-span-2 flex">
+                                <input
+                                    type="text"
+                                    placeholder={`Search by ${searchField === 'item_name' ? 'item name' : searchField}...`}
+                                    className={`theme-input ${isDarkMode ? 'dark' : 'light'} w-full px-4 py-2 rounded-l-lg`}
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                                />
+                                <select
+                                    value={searchField}
+                                    onChange={(e) => setSearchField(e.target.value)}
+                                    className={`theme-input ${isDarkMode ? 'dark' : 'light'} rounded-r-lg border-l-0`}
+                                >
+                                    <option value="item_name">Name</option>
+                                    <option value="category">Category</option>
+                                    <option value="location">Location</option>
+                                </select>
+                            </div>
+                            <div>
+                                <select
+                                    value={selectedCategory}
+                                    onChange={(e) => setSelectedCategory(e.target.value)}
+                                    className={`theme-input ${isDarkMode ? 'dark' : 'light'} w-full`}
+                                >
+                                    <option value="All">All Categories</option>
+                                    {categories.map(category => (
+                                        <option key={category} value={category}>{category}</option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
 
                         {/* Inventory Table */}
@@ -322,45 +411,93 @@ const Inventory = ({ isDarkMode }) => {
                                                 )}
                                             </div>
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Quantity</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Category</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Purchase Date</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Expiry Date</th>
+                                        <th 
+                                            className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer"
+                                            onClick={() => handleSort('quantity')}
+                                        >
+                                            <div className="flex items-center">
+                                                Quantity
+                                                {sortField === 'quantity' && (
+                                                    sortDirection === 'asc' ? <FaChevronUp className="ml-1" /> : <FaChevronDown className="ml-1" />
+                                                )}
+                                            </div>
+                                        </th>
+                                        <th 
+                                            className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer"
+                                            onClick={() => handleSort('category')}
+                                        >
+                                            <div className="flex items-center">
+                                                Category
+                                                {sortField === 'category' && (
+                                                    sortDirection === 'asc' ? <FaChevronUp className="ml-1" /> : <FaChevronDown className="ml-1" />
+                                                )}
+                                            </div>
+                                        </th>
+                                        <th 
+                                            className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer"
+                                            onClick={() => handleSort('purchase_date')}
+                                        >
+                                            <div className="flex items-center">
+                                                Purchase Date
+                                                {sortField === 'purchase_date' && (
+                                                    sortDirection === 'asc' ? <FaChevronUp className="ml-1" /> : <FaChevronDown className="ml-1" />
+                                                )}
+                                            </div>
+                                        </th>
+                                        <th 
+                                            className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer"
+                                            onClick={() => handleSort('expiry_date')}
+                                        >
+                                            <div className="flex items-center">
+                                                Expiry Date
+                                                {sortField === 'expiry_date' && (
+                                                    sortDirection === 'asc' ? <FaChevronUp className="ml-1" /> : <FaChevronDown className="ml-1" />
+                                                )}
+                                            </div>
+                                        </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200">
-                                    {filteredInventory.map((item) => (
-                                        <tr key={item.item_id} className={`theme-table-row ${isDarkMode ? 'dark' : 'light'}`}>
-                                            <td className="px-6 py-4 whitespace-nowrap">{item.item_name}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap">{item.quantity}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className={`theme-badge ${isDarkMode ? 'dark' : 'light'} px-2 py-1 rounded-full text-sm`}>
-                                                    {item.category}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                {item.purchase_date ? new Date(item.purchase_date).toLocaleDateString() : 'N/A'}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                {item.expiry_date ? new Date(item.expiry_date).toLocaleDateString() : 'N/A'}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap space-x-2">
-                                                <button
-                                                    onClick={() => openEditModal(item)}
-                                                    className={`theme-button-secondary ${isDarkMode ? 'dark' : 'light'} p-2 rounded-lg`}
-                                                >
-                                                    <FaEdit />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDeleteItem(item.item_id)}
-                                                    className="text-red-600 hover:text-red-800 p-2 rounded-lg"
-                                                >
-                                                    <FaTrash />
-                                                </button>
+                                    {filteredInventory.length > 0 ? (
+                                        filteredInventory.map((item) => (
+                                            <tr key={item.item_id} className={`theme-table-row ${isDarkMode ? 'dark' : 'light'}`}>
+                                                <td className="px-6 py-4 whitespace-nowrap">{item.item_name}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap">{item.quantity}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span className={`theme-badge ${isDarkMode ? 'dark' : 'light'} px-2 py-1 rounded-full text-sm`}>
+                                                        {item.category}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    {item.purchase_date ? new Date(item.purchase_date).toLocaleDateString() : 'N/A'}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    {item.expiry_date ? new Date(item.expiry_date).toLocaleDateString() : 'N/A'}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap space-x-2">
+                                                    <button
+                                                        onClick={() => openEditModal(item)}
+                                                        className={`theme-button-secondary ${isDarkMode ? 'dark' : 'light'} p-2 rounded-lg`}
+                                                    >
+                                                        <FaEdit />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteItem(item.item_id)}
+                                                        className="text-red-600 hover:text-red-800 p-2 rounded-lg"
+                                                    >
+                                                        <FaTrash />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="6" className="px-6 py-4 text-center">
+                                                No items found matching your criteria
                                             </td>
                                         </tr>
-                                    ))}
+                                    )}
                                 </tbody>
                             </table>
                         </div>
