@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaPlus, FaTrash, FaEdit, FaChartLine } from 'react-icons/fa';
+import { FaPlus, FaTrash, FaEdit, FaSearch, FaFileCsv } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import '../styles/cards.css';
@@ -10,9 +10,16 @@ const StockManagement = ({ isDarkMode }) => {
     const [loading, setLoading] = useState(true);
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingStock, setEditingStock] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [searchField, setSearchField] = useState('name'); // 'name' or 'status'
     const [formData, setFormData] = useState({
         name: '',
         quantity: 0,
+        expiration_date: ''
+    });
+    const [formErrors, setFormErrors] = useState({
+        name: '',
+        quantity: '',
         expiration_date: ''
     });
 
@@ -53,19 +60,62 @@ const StockManagement = ({ isDarkMode }) => {
         }
     };
 
+    const validateForm = () => {
+        let valid = true;
+        const newErrors = {
+            name: '',
+            quantity: '',
+            expiration_date: ''
+        };
+
+        // Name validation
+        if (!formData.name.trim()) {
+            newErrors.name = 'Item name is required';
+            valid = false;
+        } else if (formData.name.length > 100) {
+            newErrors.name = 'Item name must be less than 100 characters';
+            valid = false;
+        }
+
+        // Quantity validation
+        if (formData.quantity === '' || isNaN(formData.quantity)) {
+            newErrors.quantity = 'Quantity is required';
+            valid = false;
+        } else if (formData.quantity < 0) {
+            newErrors.quantity = 'Quantity cannot be negative';
+            valid = false;
+        } else if (formData.quantity > 1000000) {
+            newErrors.quantity = 'Quantity is too large';
+            valid = false;
+        }
+
+        // Expiration date validation (if provided)
+        if (formData.expiration_date) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const expDate = new Date(formData.expiration_date);
+            if (expDate < today) {
+                newErrors.expiration_date = 'Expiration date cannot be in the past';
+                valid = false;
+            }
+        }
+
+        setFormErrors(newErrors);
+        return valid;
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        try {
-            // Validate required fields
-            if (!formData.name || formData.quantity < 0) {
-                toast.error('Please fill in all required fields with valid values');
-                return;
-            }
+        
+        if (!validateForm()) {
+            return;
+        }
 
+        try {
             const submissionData = {
-                name: formData.name,
+                name: formData.name.trim(),
                 quantity: Number(formData.quantity),
-                expiration_date: formData.expiration_date
+                expiration_date: formData.expiration_date || null
             };
 
             if (editingStock) {
@@ -113,6 +163,66 @@ const StockManagement = ({ isDarkMode }) => {
         setShowAddModal(true);
     };
 
+    const handleSearch = () => {
+        if (!searchTerm.trim()) {
+            fetchStocks();
+            return;
+        }
+
+        const filtered = stocks.filter(stock => {
+            if (searchField === 'name') {
+                return stock.name.toLowerCase().includes(searchTerm.toLowerCase());
+            } else if (searchField === 'status') {
+                const status = stock.quantity <= 0 ? 'out of stock' : 'in stock';
+                return status.includes(searchTerm.toLowerCase());
+            }
+            return true;
+        });
+
+        setStocks(filtered);
+    };
+
+    const exportToCSV = () => {
+        let csvContent = "data:text/csv;charset=utf-8,";
+        
+        // Add headers
+        const headers = ["Item Name", "Quantity", "Status", "Expiration Date"];
+        csvContent += headers.join(",") + "\r\n";
+        
+        // Add data rows
+        stocks.forEach(stock => {
+            const status = stock.quantity <= 0 ? 'Out of Stock' : 'In Stock';
+            const row = [
+                `"${stock.name}"`,
+                stock.quantity,
+                `"${status}"`,
+                stock.expiration_date ? new Date(stock.expiration_date).toLocaleDateString() : 'N/A'
+            ];
+            csvContent += row.join(",") + "\r\n";
+        });
+        
+        // Create download link
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `stock_report_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    const filteredStocks = stocks.filter(stock => {
+        if (!searchTerm) return true;
+        
+        if (searchField === 'name') {
+            return stock.name.toLowerCase().includes(searchTerm.toLowerCase());
+        } else if (searchField === 'status') {
+            const status = stock.quantity <= 0 ? 'out of stock' : 'in stock';
+            return status.includes(searchTerm.toLowerCase());
+        }
+        return true;
+    });
+
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -134,12 +244,50 @@ const StockManagement = ({ isDarkMode }) => {
                             <h1 className={`text-2xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                                 Stock Management
                             </h1>
+                            <div className="flex space-x-2">
+                                <button
+                                    onClick={exportToCSV}
+                                    className={`theme-button ${isDarkMode ? 'dark' : 'light'} px-4 py-2 rounded-lg flex items-center`}
+                                >
+                                    <FaFileCsv className="mr-2" />
+                                    Export to CSV
+                                </button>
+                                <button
+                                    onClick={() => setShowAddModal(true)}
+                                    className={`theme-button ${isDarkMode ? 'dark' : 'light'} px-4 py-2 rounded-lg flex items-center`}
+                                >
+                                    <FaPlus className="mr-2" />
+                                    Add Stock Item
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Search Section */}
+                        <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="md:col-span-2 flex">
+                                <input
+                                    type="text"
+                                    placeholder={`Search by ${searchField === 'name' ? 'item name' : 'status'}...`}
+                                    className={`theme-input ${isDarkMode ? 'dark' : 'light'} w-full px-4 py-2 rounded-l-lg`}
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                                />
+                                <select
+                                    value={searchField}
+                                    onChange={(e) => setSearchField(e.target.value)}
+                                    className={`theme-input ${isDarkMode ? 'dark' : 'light'} rounded-r-lg border-l-0`}
+                                >
+                                    <option value="name">Name</option>
+                                    <option value="status">Status</option>
+                                </select>
+                            </div>
                             <button
-                                onClick={() => setShowAddModal(true)}
-                                className={`theme-button ${isDarkMode ? 'dark' : 'light'} px-4 py-2 rounded-lg flex items-center`}
+                                onClick={handleSearch}
+                                className={`theme-button ${isDarkMode ? 'dark' : 'light'} px-4 py-2 rounded-lg flex items-center justify-center`}
                             >
-                                <FaPlus className="mr-2" />
-                                Add Stock Item
+                                <FaSearch className="mr-2" />
+                                Search
                             </button>
                         </div>
 
@@ -156,38 +304,46 @@ const StockManagement = ({ isDarkMode }) => {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200">
-                                    {stocks.map((stock) => (
-                                        <tr key={stock.stock_id} className={`theme-table-row ${isDarkMode ? 'dark' : 'light'}`}>
-                                            <td className="px-6 py-4 whitespace-nowrap">{stock.name}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap">{stock.quantity}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                {stock.expiration_date ? new Date(stock.expiration_date).toLocaleDateString() : 'N/A'}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className={`px-2 py-1 rounded-full text-sm ${
-                                                    stock.quantity <= 0
-                                                        ? `${isDarkMode ? 'bg-red-900 text-red-100' : 'bg-red-100 text-red-800'}`
-                                                        : `${isDarkMode ? 'bg-green-900 text-green-100' : 'bg-green-100 text-green-800'}`
-                                                }`}>
-                                                    {stock.quantity <= 0 ? 'Out of Stock' : 'In Stock'}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap space-x-2">
-                                                <button
-                                                    onClick={() => handleEdit(stock)}
-                                                    className={`theme-button-secondary ${isDarkMode ? 'dark' : 'light'} p-2 rounded-lg`}
-                                                >
-                                                    <FaEdit />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(stock.stock_id)}
-                                                    className="text-red-600 hover:text-red-800 p-2 rounded-lg"
-                                                >
-                                                    <FaTrash />
-                                                </button>
+                                    {filteredStocks.length > 0 ? (
+                                        filteredStocks.map((stock) => (
+                                            <tr key={stock.stock_id} className={`theme-table-row ${isDarkMode ? 'dark' : 'light'}`}>
+                                                <td className="px-6 py-4 whitespace-nowrap">{stock.name}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap">{stock.quantity}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    {stock.expiration_date ? new Date(stock.expiration_date).toLocaleDateString() : 'N/A'}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span className={`px-2 py-1 rounded-full text-sm ${
+                                                        stock.quantity <= 0
+                                                            ? `${isDarkMode ? 'bg-red-900 text-red-100' : 'bg-red-100 text-red-800'}`
+                                                            : `${isDarkMode ? 'bg-green-900 text-green-100' : 'bg-green-100 text-green-800'}`
+                                                    }`}>
+                                                        {stock.quantity <= 0 ? 'Out of Stock' : 'In Stock'}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap space-x-2">
+                                                    <button
+                                                        onClick={() => handleEdit(stock)}
+                                                        className={`theme-button-secondary ${isDarkMode ? 'dark' : 'light'} p-2 rounded-lg`}
+                                                    >
+                                                        <FaEdit />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(stock.stock_id)}
+                                                        className="text-red-600 hover:text-red-800 p-2 rounded-lg"
+                                                    >
+                                                        <FaTrash />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="5" className="px-6 py-4 text-center">
+                                                No stock items found matching your criteria
                                             </td>
                                         </tr>
-                                    ))}
+                                    )}
                                 </tbody>
                             </table>
                         </div>
@@ -211,9 +367,12 @@ const StockManagement = ({ isDarkMode }) => {
                                     type="text"
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    className={`theme-input ${isDarkMode ? 'dark' : 'light'} w-full mt-1`}
+                                    className={`theme-input ${isDarkMode ? 'dark' : 'light'} w-full mt-1 ${formErrors.name ? 'border-red-500' : ''}`}
                                     required
                                 />
+                                {formErrors.name && (
+                                    <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>
+                                )}
                             </div>
 
                             <div>
@@ -223,11 +382,15 @@ const StockManagement = ({ isDarkMode }) => {
                                 <input
                                     type="number"
                                     min="0"
+                                    step="1"
                                     value={formData.quantity}
                                     onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                                    className={`theme-input ${isDarkMode ? 'dark' : 'light'} w-full mt-1`}
+                                    className={`theme-input ${isDarkMode ? 'dark' : 'light'} w-full mt-1 ${formErrors.quantity ? 'border-red-500' : ''}`}
                                     required
                                 />
+                                {formErrors.quantity && (
+                                    <p className="text-red-500 text-xs mt-1">{formErrors.quantity}</p>
+                                )}
                             </div>
 
                             <div>
@@ -238,8 +401,12 @@ const StockManagement = ({ isDarkMode }) => {
                                     type="date"
                                     value={formData.expiration_date}
                                     onChange={(e) => setFormData({ ...formData, expiration_date: e.target.value })}
-                                    className={`theme-input ${isDarkMode ? 'dark' : 'light'} w-full mt-1`}
+                                    className={`theme-input ${isDarkMode ? 'dark' : 'light'} w-full mt-1 ${formErrors.expiration_date ? 'border-red-500' : ''}`}
+                                    min={new Date().toISOString().split('T')[0]}
                                 />
+                                {formErrors.expiration_date && (
+                                    <p className="text-red-500 text-xs mt-1">{formErrors.expiration_date}</p>
+                                )}
                             </div>
 
                             <div className="flex justify-end space-x-2">
@@ -248,6 +415,11 @@ const StockManagement = ({ isDarkMode }) => {
                                     onClick={() => {
                                         setShowAddModal(false);
                                         setEditingStock(null);
+                                        setFormErrors({
+                                            name: '',
+                                            quantity: '',
+                                            expiration_date: ''
+                                        });
                                     }}
                                     className={`theme-button-secondary ${isDarkMode ? 'dark' : 'light'} px-4 py-2 rounded-lg`}
                                 >

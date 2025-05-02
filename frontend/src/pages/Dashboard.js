@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { FaUserEdit, FaTrash, FaPlus, FaUsers } from 'react-icons/fa';
+import { FaUserEdit, FaTrash, FaPlus, FaUsers, FaFileExport, FaSearch } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 
 const Dashboard = ({ isDarkMode }) => {
     const [users, setUsers] = useState([]);
+    const [filteredUsers, setFilteredUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showAddModal, setShowAddModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
@@ -15,6 +16,7 @@ const Dashboard = ({ isDarkMode }) => {
         password: '',
         role: 'user'
     });
+    const [searchTerm, setSearchTerm] = useState('');
 
     // Create API instance with auth token
     const api = axios.create({
@@ -36,12 +38,76 @@ const Dashboard = ({ isDarkMode }) => {
         }
     );
 
+    // Filter users based on search term
+    const filterUsers = () => {
+        if (!searchTerm) {
+            setFilteredUsers(users);
+            return;
+        }
+
+        const lowerCaseTerm = searchTerm.toLowerCase();
+        const filtered = users.filter(user => {
+            return (
+                (user.username && user.username.toLowerCase().includes(lowerCaseTerm)) ||
+                (user.email && user.email.toLowerCase().includes(lowerCaseTerm)) ||
+                (user.role && user.role.toLowerCase().includes(lowerCaseTerm)) ||
+                (user.created_at && new Date(user.created_at).toLocaleString().toLowerCase().includes(lowerCaseTerm))
+            );
+        });
+
+        setFilteredUsers(filtered);
+    };
+
+    // Function to export users to CSV
+    const exportToCSV = () => {
+        const dataToExport = searchTerm ? filteredUsers : users;
+        
+        if (dataToExport.length === 0) {
+            toast.warning('No users to export');
+            return;
+        }
+
+        // CSV headers
+        const headers = ['ID', 'Username', 'Email', 'Role', 'Created At'];
+        
+        // Convert users data to CSV format
+        const csvRows = [
+            headers.join(','), // Header row
+            ...dataToExport.map(user => [
+                `"${user.user_id}"`,
+                `"${(user.username || '').replace(/"/g, '""')}"`,
+                `"${(user.email || '').replace(/"/g, '""')}"`,
+                `"${user.role}"`,
+                `"${new Date(user.created_at).toLocaleString()}"`
+            ].join(','))
+        ];
+
+        // Create CSV file
+        const csvContent = csvRows.join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        
+        // Create download link
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `users_export_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        
+        // Trigger download
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        toast.success('Users exported successfully');
+    };
+
     // Fetch users
     const fetchUsers = async () => {
         try {
             setLoading(true);
             const response = await api.get('/users');
             setUsers(response.data);
+            setFilteredUsers(response.data);
         } catch (error) {
             console.error('Error fetching users:', error);
             toast.error('Failed to load users');
@@ -53,6 +119,11 @@ const Dashboard = ({ isDarkMode }) => {
     useEffect(() => {
         fetchUsers();
     }, []);
+
+    // Update filtered users when search term changes
+    useEffect(() => {
+        filterUsers();
+    }, [searchTerm, users]);
 
     // Handle form input changes
     const handleInputChange = (e) => {
@@ -120,6 +191,15 @@ const Dashboard = ({ isDarkMode }) => {
         setShowEditModal(true);
     };
 
+    // Get role color for styling
+    const getRoleColor = (role) => {
+        switch (role) {
+            case 'admin': return 'bg-purple-100 text-purple-800';
+            case 'user': return 'bg-blue-100 text-blue-800';
+            default: return 'bg-gray-100 text-gray-800';
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -137,71 +217,112 @@ const Dashboard = ({ isDarkMode }) => {
                         User Management
                     </h1>
                 </div>
-                <button
-                    onClick={() => setShowAddModal(true)}
-                    className={`theme-button ${isDarkMode ? 'dark' : 'light'} px-4 py-2 rounded-lg flex items-center`}
-                >
-                    <FaPlus className="mr-2" />
-                    Add User
-                </button>
+                <div className="flex space-x-2">
+                    <button
+                        onClick={exportToCSV}
+                        className={`theme-button-secondary ${isDarkMode ? 'dark' : 'light'} px-4 py-2 rounded-lg flex items-center`}
+                        title="Export to CSV"
+                    >
+                        <FaFileExport className="mr-2" />
+                        Export
+                    </button>
+                    <button
+                        onClick={() => setShowAddModal(true)}
+                        className={`theme-button ${isDarkMode ? 'dark' : 'light'} px-4 py-2 rounded-lg flex items-center`}
+                    >
+                        <FaPlus className="mr-2" />
+                        Add User
+                    </button>
+                </div>
             </div>
 
-            {/* Users Table */}
-            <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className={isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}>
-                        <tr>
-                            <th className={`px-6 py-3 text-left text-xs font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>
-                                Username
-                            </th>
-                            <th className={`px-6 py-3 text-left text-xs font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>
-                                Email
-                            </th>
-                            <th className={`px-6 py-3 text-left text-xs font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>
-                                Role
-                            </th>
-                            <th className={`px-6 py-3 text-left text-xs font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-500'} uppercase tracking-wider`}>
-                                Actions
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody className={`divide-y divide-gray-200 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
-                        {users.map((user) => (
-                            <tr key={user.user_id}>
-                                <td className={`px-6 py-4 whitespace-nowrap text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
-                                    {user.username}
-                                </td>
-                                <td className={`px-6 py-4 whitespace-nowrap text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
-                                    {user.email}
-                                </td>
-                                <td className={`px-6 py-4 whitespace-nowrap text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
-                                    {user.role}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                    <div className="flex space-x-2">
-                                        <button
-                                            onClick={() => handleEditClick(user)}
-                                            className={`p-2 rounded-lg ${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
-                                        >
-                                            <FaUserEdit className={isDarkMode ? 'text-gray-400' : 'text-gray-600'} />
-                                        </button>
-                                        <button
-                                            onClick={() => handleDeleteUser(user.user_id)}
-                                            className="p-2 rounded-lg hover:bg-red-100"
-                                        >
-                                            <FaTrash className="text-red-600" />
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+            {/* Search Bar */}
+            <div className="mb-6">
+                <div className={`relative ${isDarkMode ? 'text-gray-200' : 'text-gray-600'} focus-within:text-gray-400`}>
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-2">
+                        <FaSearch className="h-5 w-5" />
+                    </span>
+                    <input
+                        type="text"
+                        placeholder="Search users by name, email, or role..."
+                        className={`theme-input ${isDarkMode ? 'dark' : 'light'} w-full py-2 pl-10 pr-4 rounded-lg`}
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                    {searchTerm && (
+                        <button
+                            onClick={() => setSearchTerm('')}
+                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700"
+                        >
+                            ×
+                        </button>
+                    )}
+                </div>
+                {searchTerm && (
+                    <p className={`mt-1 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        Showing {filteredUsers.length} {filteredUsers.length === 1 ? 'result' : 'results'}
+                    </p>
+                )}
             </div>
+
+            {/* Users Grid */}
+            {filteredUsers.length === 0 ? (
+                <div className={`text-center py-8 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    {searchTerm ? (
+                        <p>No users found matching your search.</p>
+                    ) : (
+                        <p>No users found. Add your first user!</p>
+                    )}
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredUsers.map((user) => (
+                        <div 
+                            key={user.user_id}
+                            className={`rounded-lg shadow-md overflow-hidden transition-all duration-200 hover:shadow-lg ${
+                                isDarkMode ? 'bg-gray-800' : 'bg-white'
+                            }`}
+                        >
+                            <div className="p-6">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div>
+                                        <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                            {user.username}
+                                        </h3>
+                                        <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                            {user.email}
+                                        </p>
+                                    </div>
+                                    <span className={`px-3 py-1 text-xs font-medium rounded-full ${getRoleColor(user.role)}`}>
+                                        {user.role}
+                                    </span>
+                                </div>
+                           
+                                <div className="mt-6 flex justify-end space-x-2">
+                                    <button
+                                        onClick={() => handleEditClick(user)}
+                                        className={`p-2 rounded-lg ${isDarkMode ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-600'}`}
+                                        title="Edit user"
+                                    >
+                                        <FaUserEdit />
+                                    </button>
+                                    <button
+                                        onClick={() => handleDeleteUser(user.user_id)}
+                                        className="p-2 rounded-lg hover:bg-red-100 text-red-600"
+                                        title="Delete user"
+                                    >
+                                        <FaTrash />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
 
             {/* Add User Modal */}
             {showAddModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                     <div className={`theme-card ${isDarkMode ? 'dark' : 'light'} max-w-md w-full p-6 rounded-lg`}>
                         <h2 className={`text-xl font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                             Add New User
@@ -285,7 +406,7 @@ const Dashboard = ({ isDarkMode }) => {
 
             {/* Edit User Modal */}
             {showEditModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                     <div className={`theme-card ${isDarkMode ? 'dark' : 'light'} max-w-md w-full p-6 rounded-lg`}>
                         <h2 className={`text-xl font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                             Edit User
@@ -371,4 +492,4 @@ const Dashboard = ({ isDarkMode }) => {
     );
 };
 
-export default Dashboard; 
+export default Dashboard;

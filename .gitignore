@@ -37,7 +37,6 @@ share/python-wheels/
 .installed.cfg
 *.egg\
 frontend\node_modules\
-config.py
 .pyc
 
 

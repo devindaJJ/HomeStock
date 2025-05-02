@@ -24,7 +24,10 @@ def create_app():
 
     # Apply CORS to the app
    
-    CORS(app, supports_credentials=True, origins=["http://localhost:3000"])
+    CORS(app, supports_credentials=True, origins=["http://localhost:3001"])
+    # CORS(app, supports_credentials=True, origins="*")
+    CORS(app, supports_credentials=True)
+
     
 
     db.init_app(app)
