@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { FaPlus, FaTrash, FaEdit, FaChartLine, FaEnvelope } from 'react-icons/fa';
 import { FaPlus, FaTrash, FaEdit, FaSearch, FaFileCsv } from 'react-icons/fa';
+
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import '../styles/cards.css';
@@ -60,6 +62,16 @@ const StockManagement = ({ isDarkMode }) => {
         }
     };
 
+
+    const handleCheckExpiration = async () => {
+        try {
+            const response = await api.post('/alerts/check');
+            toast.success('Expiration check completed! Check your email for alerts.');
+            fetchStocks();
+        } catch (error) {
+            console.error('Error checking expiration:', error);
+            toast.error('Failed to check expiration dates');
+        }
     const validateForm = () => {
         let valid = true;
         const newErrors = {
@@ -102,6 +114,7 @@ const StockManagement = ({ isDarkMode }) => {
 
         setFormErrors(newErrors);
         return valid;
+
     };
 
     const handleSubmit = async (e) => {
@@ -244,6 +257,14 @@ const StockManagement = ({ isDarkMode }) => {
                             <h1 className={`text-2xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                                 Stock Management
                             </h1>
+
+                            <div className="flex space-x-4">
+                                <button
+                                    onClick={handleCheckExpiration}
+                                    className={`theme-button ${isDarkMode ? 'dark' : 'light'} px-4 py-2 rounded-lg flex items-center`}
+                                >
+                                    <FaEnvelope className="mr-2" />
+                                    Check Expiration
                             <div className="flex space-x-2">
                                 <button
                                     onClick={exportToCSV}
@@ -251,6 +272,7 @@ const StockManagement = ({ isDarkMode }) => {
                                 >
                                     <FaFileCsv className="mr-2" />
                                     Export to CSV
+
                                 </button>
                                 <button
                                     onClick={() => setShowAddModal(true)}
